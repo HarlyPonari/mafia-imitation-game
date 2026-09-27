@@ -12,6 +12,8 @@ bot = commands.Bot(command_prefix="/", intents=intents)
 @bot.event
 async def on_ready():
   await bot.tree.sync()
+  # for development purposes only, to get commadns propogating faster.
+  await bot.tree.sync(guild=discord.Object(id=os.getenv("GUILD_ID") or ""))
   print(f"Running, logged in as {bot.user}")
 
 initial_extensions = [
