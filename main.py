@@ -6,14 +6,12 @@ from dotenv import load_dotenv
 load_dotenv()
 
 intents = discord.Intents.default()
-intents.message_content = True
 
 bot = commands.Bot(command_prefix="/", intents=intents)
 
 @bot.event
 async def on_ready():
   await bot.tree.sync()
-  await bot.tree.sync(guild=discord.Object(id=os.getenv("GUILD_ID") or ""))
   print(f"Running, logged in as {bot.user}")
 
 initial_extensions = [
