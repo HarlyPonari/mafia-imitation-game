@@ -8,6 +8,7 @@ A project meant to test Alan Turing's Paper 'The Imitation Game' with modern Art
 2. Create the python virtual environemnt via the command `python -m venv .venv` or `python3` depends on your install
 3. Create a `.env` file inside of the repo and fill in these variables with your credentials
     - `DISCORD_TOKEN: str`   the discord bot token
+    - `OPENROUTER_API_KEY: str` the api key for openrouter (may be changed in the future)
     - `GUILD_ID: str | None` optional
 4. Enable the virtual environment depends on your OS:
     - Windows: inside of a powershell terminal and run (while within the project directry) `.venv\Scripts\activate`
