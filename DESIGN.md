@@ -1,0 +1,6 @@
+- `/play` opens a lobby with a Join button. Names aren't shown.
+- When at least two players have joined, the bot picks two at random: interrogator and witness.
+- Random X/Y label for the human. The AI gets the other. 
+- Two private channels, plus intsruciton messages for each player
+- Interrogator asks, the bot sends the question to the witness and the AI, then posts both answers together, only after the human has replied. A 90s timeout cancels the round.
+- The vote buttons appear after question 7, and the vote is forced after 8. Then the reveal.
