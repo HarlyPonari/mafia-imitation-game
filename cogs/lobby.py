@@ -6,6 +6,7 @@ from discord import app_commands
 from discord.ext import commands
 
 from game import Game, games_by_channel
+from cogs.relay import MAX_QUESTIONS, VOTE_AT
 from utils.channels import create_private_channel
 
 
@@ -53,36 +54,64 @@ class LobbyView(discord.ui.View):
             # Acknowledge the button before the channel API calls.
             await interaction.response.edit_message(content=content, view=self)
 
-            interrogator_member = await interaction.guild.fetch_member(interrogator)
-            witness_member = await interaction.guild.fetch_member(witness)
+            # Track channels we create, so a failure halfway can clean them up.
+            created = []
+            try:
+                interrogator_member = await interaction.guild.fetch_member(interrogator)
+                witness_member = await interaction.guild.fetch_member(witness)
 
-            interrogator_channel = await create_private_channel(
-                interaction.guild,
-                interrogator_member,
-                f"round-{round_id}-a",
-            )
-            await interrogator_channel.send(
-                "You are the interrogator. Prepare questions to ask the witness."
-            )
+                interrogator_channel = await create_private_channel(
+                    interaction.guild,
+                    interrogator_member,
+                    f"round-{round_id}-a",
+                )
+                created.append(interrogator_channel)
 
-            witness_channel = await create_private_channel(
-                interaction.guild,
-                witness_member,
-                f"round-{round_id}-b",
-            )
-            game = Game(
-                interrogator=interrogator_member,
-                witness=witness_member,
-                interrogator_channel=interrogator_channel,
-                witness_channel=witness_channel,
-            )
-            games_by_channel[interrogator_channel.id] = game
-            games_by_channel[witness_channel.id] = game
+                witness_channel = await create_private_channel(
+                    interaction.guild,
+                    witness_member,
+                    f"round-{round_id}-b",
+                )
+                created.append(witness_channel)
 
-            await witness_channel.send(
-                "You are the witness. Wait for the interrogator's questions "
-                "and answer them in your own words."
-            )
+                game = Game(
+                    interrogator=interrogator_member,
+                    witness=witness_member,
+                    interrogator_channel=interrogator_channel,
+                    witness_channel=witness_channel,
+                    origin_channel=interaction.channel,
+                )
+                games_by_channel[interrogator_channel.id] = game
+                games_by_channel[witness_channel.id] = game
+
+                await interrogator_channel.send(
+                    "You are the interrogator. Ask the witness one question at a time "
+                    "by typing it here. After the witness replies you will see two "
+                    "answers, A and B: one came from a human, one from an AI. "
+                    f"After {VOTE_AT} questions you may vote on which was the AI; "
+                    f"after {MAX_QUESTIONS} you must vote."
+                )
+                await witness_channel.send(
+                    "You are the witness. The interrogator's questions will appear "
+                    "here. Answer each one in your own words, casually, like yourself. "
+                    "An AI is answering the same questions and the interrogator is "
+                    "trying to tell you apart, so act natural. You have 90 seconds "
+                    "per question or the round is cancelled."
+                )
+            except Exception as exc:
+                # Most likely cause: the bot lacks the Manage Channels permission.
+                print(f"Round setup failed: {exc!r}")
+                for channel in created:
+                    games_by_channel.pop(channel.id, None)
+                    try:
+                        await channel.delete(reason="Round setup failed")
+                    except Exception:
+                        pass
+                await interaction.channel.send(
+                    "Could not set up the round. Check that the bot has the "
+                    "Manage Channels permission, then run /play again."
+                )
+                return
         else:
             content = f"Players joined: {len(self.players)}/2"
 

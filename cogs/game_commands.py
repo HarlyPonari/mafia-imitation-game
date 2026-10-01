@@ -1,10 +1,7 @@
 from os import getenv
 from discord import app_commands, Interaction, Embed, Color
-from discord.colour import Color 
 from discord.ext import commands
 from openrouter import OpenRouter
-
-OPENROUTER_API = "https://openrouter.ai/api/v1"
 
 class GameCommands(commands.Cog):
   def __init__(self, bot):

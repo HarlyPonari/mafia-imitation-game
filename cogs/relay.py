@@ -56,12 +56,23 @@ class Relay(commands.Cog):
         for channel in (game.interrogator_channel, game.witness_channel):
             if games_by_channel.get(channel.id) is game:
                 games_by_channel.pop(channel.id)
-        # Notify both players (a failed DM must not stop the cleanup below).
-        for player in (game.interrogator, game.witness):
+        # Announce the result where /play was run. This works even when a
+        # player has DMs closed; DMs are only the fallback.
+        announced = False
+        if game.origin_channel is not None:
             try:
-                await player.send(notice)
+                await game.origin_channel.send(
+                    notice, allowed_mentions=discord.AllowedMentions.none()
+                )
+                announced = True
             except Exception as exc:
-                print(f"Round notice failed for {player.id}: {exc!r}")
+                print(f"Round announcement failed: {exc!r}")
+        if not announced:
+            for player in (game.interrogator, game.witness):
+                try:
+                    await player.send(notice)
+                except Exception as exc:
+                    print(f"Round notice failed for {player.id}: {exc!r}")
         for channel in (game.interrogator_channel, game.witness_channel):
             try:
                 await delete_channel(channel)

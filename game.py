@@ -22,6 +22,8 @@ class Game:
     ended: bool = False
     witness_timeout_task: asyncio.Task | None = None
     question_delivery: asyncio.Future[bool] | None = None
+    # Channel where /play was run; round results are announced here.
+    origin_channel: discord.abc.Messageable | None = None
 
 
 
