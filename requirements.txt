@@ -1,4 +1,3 @@
-discord
-dotenv
-openai
+discord.py
+python-dotenv
 openrouter
